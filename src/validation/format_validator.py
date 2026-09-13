@@ -21,10 +21,15 @@ class FormatValidator:
 
         left_points = {point.point_id: point for point in left.points}
         right_points = {point.point_id: point for point in right.points}
+        left_ids = set(left_points)
+        right_ids = set(right_points)
+        for point_id in sorted(left_ids - right_ids):
+            differences.append(f"missing point in right model: {point_id}")
+        for point_id in sorted(right_ids - left_ids):
+            differences.append(f"extra point in right model: {point_id}")
         for point_id, point in left_points.items():
             other = right_points.get(point_id)
             if other is None:
-                differences.append(f"missing point: {point_id}")
                 continue
             for axis in ("x", "y", "z"):
                 if abs(getattr(point, axis) - getattr(other, axis)) > tolerance:

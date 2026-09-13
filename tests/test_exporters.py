@@ -21,6 +21,20 @@ def test_topcon_export_round_trip():
     assert parsed.point_count == model.point_count
     assert parsed.triangle_count == model.triangle_count
     assert parsed.coordinate_system == "EPSG:2193"
+    assert parsed.points[0].description == "A"
+    assert parsed.points[0].code == "A"
+
+
+def test_tp3_parser_rejects_unknown_versions():
+    model = build_model()
+    payload = bytearray(TopconTP3Exporter().export_bytes(model))
+    payload[4:6] = (99).to_bytes(2, "little")
+    try:
+        TP3Parser().parse_bytes(bytes(payload))
+    except ValueError as exc:
+        assert "unsupported TP3 version" in str(exc)
+    else:
+        raise AssertionError("expected parser to reject unknown TP3 version")
 
 
 def test_leica_export_has_expected_magic():

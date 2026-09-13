@@ -24,3 +24,12 @@ def test_format_validator_reports_differences():
     comparison = FormatValidator().compare_models(left, right)
     assert comparison.matches is False
     assert any("point 1 z differs" in item for item in comparison.differences)
+
+
+def test_format_validator_reports_extra_point_ids():
+    left = build_model()
+    right = build_model()
+    right.points[0].point_id = 99
+    comparison = FormatValidator().compare_models(left, right)
+    assert comparison.matches is False
+    assert any("missing point in right model: 1" in item for item in comparison.differences)

@@ -12,7 +12,7 @@ class TopconTP3Exporter(BaseExporter):
     MAGIC = b"TP3\x00"
     VERSION = 1
     HEADER_STRUCT = struct.Struct("<4sHIII")
-    POINT_STRUCT = struct.Struct("<IdddH")
+    POINT_STRUCT = struct.Struct("<IdddHH")
     TRIANGLE_STRUCT = struct.Struct("<IIII")
 
     def export_bytes(self, model: TINModel) -> bytes:
@@ -36,8 +36,10 @@ class TopconTP3Exporter(BaseExporter):
         ]
         for point in sorted(model.points, key=lambda item: item.point_id or 0):
             description = point.description.encode("utf-8")
-            chunks.append(self.POINT_STRUCT.pack(point.point_id or 0, point.x, point.y, point.z, len(description)))
+            code = point.code.encode("utf-8")
+            chunks.append(self.POINT_STRUCT.pack(point.point_id or 0, point.x, point.y, point.z, len(description), len(code)))
             chunks.append(description)
+            chunks.append(code)
         for triangle in sorted(model.triangles, key=lambda item: item.triangle_id or 0):
             chunks.append(
                 self.TRIANGLE_STRUCT.pack(

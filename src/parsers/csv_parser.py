@@ -53,16 +53,14 @@ class CSVParser:
             )
         if len(row) < 3:
             raise ValueError("point rows must contain at least X, Y, Z")
-        if len(row) >= 4:
-            return Point3D(
-                point_id=int(row[0]),
-                x=float(row[1]),
-                y=float(row[2]),
-                z=float(row[3]),
-                description=row[4].strip() if len(row) > 4 else "",
-                code=row[5].strip() if len(row) > 5 else "",
-            )
-        return Point3D(point_id=row_number, x=float(row[0]), y=float(row[1]), z=float(row[2]))
+        return Point3D(
+            point_id=row_number,
+            x=float(row[0]),
+            y=float(row[1]),
+            z=float(row[2]),
+            description=row[3].strip() if len(row) > 3 else "",
+            code=row[4].strip() if len(row) > 4 else "",
+        )
 
     def _looks_like_header(self, row: Iterable[str]) -> bool:
         lowered = {cell.strip().lower() for cell in row}

@@ -104,6 +104,7 @@ class TINModel:
             name=payload.get("name", "Unnamed TIN"),
             source=payload.get("source", ""),
             coordinate_system=payload.get("coordinate_system", ""),
+            created_at=datetime.fromisoformat(payload["created_at"]) if payload.get("created_at") else datetime.now(timezone.utc),
             metadata=dict(payload.get("metadata", {})),
         )
         for point_payload in payload.get("points", []):

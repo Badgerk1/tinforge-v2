@@ -9,6 +9,13 @@ def test_csv_parser_supports_headers_and_delimiters(tmp_path):
     assert points[1].description == "EP"
 
 
+def test_csv_parser_without_header_uses_xyz_description_schema():
+    points = CSVParser().parse_text("10,20,30,BM\n11,21,31,EP\n")
+    assert [point.point_id for point in points] == [1, 2]
+    assert points[0].x == 10.0
+    assert points[0].description == "BM"
+
+
 def test_pdf_parser_extracts_and_deduplicates_points():
     text = "1 100.0 200.0 50.0 BM\n2 101.0 201.0 51.0 EP\n1 100.0 200.0 50.0 BM\n"
     result = PDFParser().parse_text(text, source_name="survey.txt")

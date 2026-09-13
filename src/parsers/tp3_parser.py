@@ -13,7 +13,8 @@ from src.core.triangle import Triangle
 class TP3Parser:
     MAGIC = b"TP3\x00"
     HEADER_STRUCT = struct.Struct("<4sHIII")
-    POINT_STRUCT = struct.Struct("<IdddH")
+    SUPPORTED_VERSION = 1
+    POINT_STRUCT = struct.Struct("<IdddHH")
     TRIANGLE_STRUCT = struct.Struct("<IIII")
 
     def parse_file(self, path: str | Path) -> TINModel:
@@ -23,6 +24,8 @@ class TP3Parser:
         magic, version, point_count, triangle_count, metadata_length = self.HEADER_STRUCT.unpack_from(payload, 0)
         if magic != self.MAGIC:
             raise ValueError("not a supported TP3 file")
+        if version != self.SUPPORTED_VERSION:
+            raise ValueError(f"unsupported TP3 version: {version}")
         offset = self.HEADER_STRUCT.size
         metadata = json.loads(payload[offset : offset + metadata_length].decode("utf-8"))
         offset += metadata_length
@@ -33,11 +36,13 @@ class TP3Parser:
             metadata=metadata,
         )
         for _ in range(point_count):
-            point_id, x, y, z, description_length = self.POINT_STRUCT.unpack_from(payload, offset)
+            point_id, x, y, z, description_length, code_length = self.POINT_STRUCT.unpack_from(payload, offset)
             offset += self.POINT_STRUCT.size
             description = payload[offset : offset + description_length].decode("utf-8")
             offset += description_length
-            model.add_point(Point3D(point_id=point_id, x=x, y=y, z=z, description=description, code=description.split()[0] if description else ""))
+            code = payload[offset : offset + code_length].decode("utf-8")
+            offset += code_length
+            model.add_point(Point3D(point_id=point_id, x=x, y=y, z=z, description=description, code=code))
         for _ in range(triangle_count):
             triangle_id, p1, p2, p3 = self.TRIANGLE_STRUCT.unpack_from(payload, offset)
             offset += self.TRIANGLE_STRUCT.size
