@@ -86,9 +86,10 @@ class DelaunayTriangulator:
                 coords = [(point.x, point.y) for point in points]
                 delaunay = ScipyDelaunay(coords)
                 ids = [point.point_id for point in points]
-                return [tuple(ids[index] for index in simplex) for simplex in delaunay.simplices], []
+                return [tuple(ids[int(index)] for index in simplex) for simplex in delaunay.simplices], []
             except Exception as exc:
-                return self._bowyer_watson(points), [f"SciPy triangulation failed; used fallback implementation: {exc}"]
+                _ = exc
+                return self._bowyer_watson(points), ["SciPy triangulation failed; used built-in fallback triangulation."]
         return self._bowyer_watson(points), []
 
     def _bowyer_watson(self, points: list[Point3D]) -> list[tuple[int, int, int]]:

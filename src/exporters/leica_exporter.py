@@ -13,7 +13,7 @@ class LeicaDBXExporter(BaseExporter):
     VERSION = 1
     HEADER_STRUCT = struct.Struct("<4sHIII")
     POINT_STRUCT = struct.Struct("<I3dH")
-    TRIANGLE_STRUCT = struct.Struct("<3I")
+    TRIANGLE_STRUCT = struct.Struct("<I3I")
 
     def export_bytes(self, model: TINModel) -> bytes:
         self.validate_model(model)
@@ -35,5 +35,5 @@ class LeicaDBXExporter(BaseExporter):
             chunks.append(self.POINT_STRUCT.pack(point.point_id or 0, point.x, point.y, point.z, len(description)))
             chunks.append(description)
         for triangle in sorted(model.triangles, key=lambda item: item.triangle_id or 0):
-            chunks.append(self.TRIANGLE_STRUCT.pack(*triangle.point_ids))
+            chunks.append(self.TRIANGLE_STRUCT.pack(triangle.triangle_id or 0, *triangle.point_ids))
         return b"".join(chunks)

@@ -55,6 +55,27 @@ def test_tp3_parser_rejects_trailing_bytes():
         raise AssertionError("expected parser to reject trailing bytes")
 
 
+def test_tp3_parser_rejects_invalid_metadata():
+    payload = bytearray(TopconTP3Exporter().export_bytes(build_model()))
+    metadata_length = int.from_bytes(payload[14:18], "little")
+    payload[18 : 18 + metadata_length] = b"{" + b"x" * (metadata_length - 1)
+    try:
+        TP3Parser().parse_bytes(bytes(payload))
+    except ValueError as exc:
+        assert "invalid TP3 metadata" in str(exc)
+    else:
+        raise AssertionError("expected parser to reject invalid metadata")
+
+
+def test_tp3_analyze_structure_rejects_short_payload():
+    try:
+        TP3Parser().analyze_structure(b"short")
+    except ValueError as exc:
+        assert "too small" in str(exc)
+    else:
+        raise AssertionError("expected structure analysis to reject short payload")
+
+
 def test_leica_export_has_expected_magic():
     payload = LeicaDBXExporter().export_bytes(build_model())
     assert payload[:4] == b"DBX\x00"

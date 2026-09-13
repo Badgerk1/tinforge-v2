@@ -26,5 +26,6 @@ class LandXMLExporter(BaseExporter):
         for triangle in sorted(model.triangles, key=lambda item: item.triangle_id or 0):
             face = ET.SubElement(faces, "F")
             face.text = " ".join(str(point_id) for point_id in triangle.point_ids)
-        ET.indent(root)
+        if hasattr(ET, "indent"):
+            ET.indent(root)
         return ET.tostring(root, encoding="utf-8", xml_declaration=True)

@@ -86,7 +86,7 @@ class PDFParser:
                 if seen_records[source_point_id] == record:
                     duplicates_removed += 1
                     continue
-                next_generated_id = max(next_generated_id, max(seen_ids)) + 1
+                next_generated_id += 1
                 replacement_id = next_generated_id
                 errors.append(
                     f"Conflicting duplicate point id {source_point_id} found; preserved later observation as point {replacement_id}."
@@ -96,6 +96,7 @@ class PDFParser:
             seen_records.setdefault(source_point_id, record)
             seen_records[point_id] = record
             seen_variants[source_point_id].add(record)
+            next_generated_id = max(next_generated_id, point_id)
             points.append(
                 Point3D(
                     point_id=point_id,

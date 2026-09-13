@@ -101,4 +101,4 @@ def test_triangulation_reports_scipy_fallback(monkeypatch):
     result = DelaunayTriangulator().triangulate(points)
     assert result.model.point_count == 3
     assert result.warnings
-    assert "used fallback implementation" in result.warnings[0]
+    assert result.warnings[0] == "SciPy triangulation failed; used built-in fallback triangulation."

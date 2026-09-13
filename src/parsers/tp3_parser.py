@@ -32,7 +32,10 @@ class TP3Parser:
         offset = self.HEADER_STRUCT.size
         if len(payload) < offset + metadata_length:
             raise ValueError("payload is truncated before TP3 metadata")
-        metadata = json.loads(payload[offset : offset + metadata_length].decode("utf-8"))
+        try:
+            metadata = json.loads(payload[offset : offset + metadata_length].decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise ValueError("payload contains invalid TP3 metadata") from exc
         offset += metadata_length
         minimum_length = offset + (point_count * self.POINT_STRUCT.size) + (triangle_count * self.TRIANGLE_STRUCT.size)
         if len(payload) < minimum_length:
@@ -63,6 +66,8 @@ class TP3Parser:
         return model
 
     def analyze_structure(self, payload: bytes) -> dict[str, Any]:
+        if len(payload) < self.HEADER_STRUCT.size:
+            raise ValueError("payload is too small to contain a TP3 header")
         magic, version, point_count, triangle_count, metadata_length = self.HEADER_STRUCT.unpack_from(payload, 0)
         return {
             "magic": magic.decode("latin1"),
