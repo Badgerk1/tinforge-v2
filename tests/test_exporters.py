@@ -44,6 +44,17 @@ def test_tp3_round_trip_preserves_created_at():
     assert parsed.created_at == model.created_at
 
 
+def test_tp3_parser_rejects_trailing_bytes():
+    model = build_model()
+    payload = TopconTP3Exporter().export_bytes(model) + b"junk"
+    try:
+        TP3Parser().parse_bytes(payload)
+    except ValueError as exc:
+        assert "trailing data" in str(exc)
+    else:
+        raise AssertionError("expected parser to reject trailing bytes")
+
+
 def test_leica_export_has_expected_magic():
     payload = LeicaDBXExporter().export_bytes(build_model())
     assert payload[:4] == b"DBX\x00"

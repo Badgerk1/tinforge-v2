@@ -61,6 +61,7 @@ class PDFParser:
     def parse_text(self, text: str, *, source_name: str = "inline") -> PDFParseResult:
         seen_ids: set[int] = set()
         seen_records: dict[int, tuple[float, float, float, str]] = {}
+        seen_variants: dict[int, set[tuple[float, float, float, str]]] = {}
         next_generated_id = 0
         points: list[Point3D] = []
         duplicates_removed = 0
@@ -69,26 +70,32 @@ class PDFParser:
             match = POINT_PATTERN.match(raw_line)
             if not match:
                 continue
-            point_id = int(match.group("id"))
+            source_point_id = int(match.group("id"))
+            point_id = source_point_id
             description = (match.group("description") or "").strip()
             code = description.split()[0] if description else ""
             x = float(match.group("x"))
             y = float(match.group("y"))
             z = float(match.group("z"))
             record = (x, y, z, description)
-            if point_id in seen_ids:
-                if seen_records[point_id] == record:
+            seen_variants.setdefault(source_point_id, set())
+            if record in seen_variants[source_point_id]:
+                duplicates_removed += 1
+                continue
+            if point_id in seen_ids and source_point_id in seen_records:
+                if seen_records[source_point_id] == record:
                     duplicates_removed += 1
                     continue
                 next_generated_id = max(next_generated_id, max(seen_ids)) + 1
                 replacement_id = next_generated_id
                 errors.append(
-                    f"Conflicting duplicate point id {point_id} found; preserved later observation as point {replacement_id}."
+                    f"Conflicting duplicate point id {source_point_id} found; preserved later observation as point {replacement_id}."
                 )
                 point_id = replacement_id
             seen_ids.add(point_id)
-            if match and int(match.group("id")) not in seen_records:
-                seen_records[int(match.group("id"))] = record
+            seen_records.setdefault(source_point_id, record)
+            seen_records[point_id] = record
+            seen_variants[source_point_id].add(record)
             points.append(
                 Point3D(
                     point_id=point_id,

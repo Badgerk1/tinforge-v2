@@ -58,6 +58,8 @@ class TP3Parser:
             triangle_id, p1, p2, p3 = self.TRIANGLE_STRUCT.unpack_from(payload, offset)
             offset += self.TRIANGLE_STRUCT.size
             model.add_triangle(Triangle(point_ids=(p1, p2, p3), triangle_id=triangle_id))
+        if offset != len(payload):
+            raise ValueError("payload contains trailing data after TP3 records")
         return model
 
     def analyze_structure(self, payload: bytes) -> dict[str, Any]:

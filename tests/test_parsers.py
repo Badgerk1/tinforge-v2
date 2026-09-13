@@ -42,3 +42,10 @@ def test_pdf_parser_handles_multiple_conflicting_duplicates_for_same_id():
     text = "1 100.0 200.0 50.0 BM\n1 101.0 201.0 51.0 EP\n1 102.0 202.0 52.0 CL\n"
     result = PDFParser().parse_text(text, source_name="survey.txt")
     assert [point.point_id for point in result.points] == [1, 2, 3]
+
+
+def test_pdf_parser_deduplicates_repeated_conflicting_observations():
+    text = "1 100.0 200.0 50.0 BM\n1 101.0 201.0 51.0 EP\n1 101.0 201.0 51.0 EP\n"
+    result = PDFParser().parse_text(text, source_name="survey.txt")
+    assert [point.point_id for point in result.points] == [1, 2]
+    assert result.duplicates_removed == 1

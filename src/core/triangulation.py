@@ -78,6 +78,9 @@ class DelaunayTriangulator:
         return TriangulationResult(model=model, quality_metrics=quality_metrics, statistics=statistics, warnings=warnings)
 
     def _compute_simplices(self, points: list[Point3D]) -> tuple[list[tuple[int, int, int]], list[str]]:
+        for index, point in enumerate(points, start=1):
+            if point.point_id is None:
+                point.point_id = index
         if ScipyDelaunay is not None:
             try:
                 coords = [(point.x, point.y) for point in points]
