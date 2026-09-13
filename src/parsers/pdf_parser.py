@@ -60,29 +60,48 @@ class PDFParser:
 
     def parse_text(self, text: str, *, source_name: str = "inline") -> PDFParseResult:
         seen_ids: set[int] = set()
+        seen_records: dict[int, tuple[float, float, float, str]] = {}
         points: list[Point3D] = []
         duplicates_removed = 0
+        errors: list[str] = []
         for raw_line in text.splitlines():
             match = POINT_PATTERN.match(raw_line)
             if not match:
                 continue
             point_id = int(match.group("id"))
-            if point_id in seen_ids:
-                duplicates_removed += 1
-                continue
-            seen_ids.add(point_id)
             description = (match.group("description") or "").strip()
             code = description.split()[0] if description else ""
+            x = float(match.group("x"))
+            y = float(match.group("y"))
+            z = float(match.group("z"))
+            record = (x, y, z, description)
+            if point_id in seen_ids:
+                if seen_records[point_id] == record:
+                    duplicates_removed += 1
+                    continue
+                replacement_id = max(seen_ids) + 1
+                errors.append(
+                    f"Conflicting duplicate point id {point_id} found; preserved later observation as point {replacement_id}."
+                )
+                point_id = replacement_id
+            seen_ids.add(point_id)
+            seen_records[point_id] = record
             points.append(
                 Point3D(
                     point_id=point_id,
-                    x=float(match.group("x")),
-                    y=float(match.group("y")),
-                    z=float(match.group("z")),
+                    x=x,
+                    y=y,
+                    z=z,
                     description=description,
                     code=code,
                     attributes={"source": source_name},
                 )
             )
         metadata = {"source": source_name, "parser": "regex-table-extractor"}
-        return PDFParseResult(points=points, metadata=metadata, duplicates_removed=duplicates_removed, pages_processed=max(text.count("\f") + 1, 1 if text else 0))
+        return PDFParseResult(
+            points=points,
+            metadata=metadata,
+            duplicates_removed=duplicates_removed,
+            pages_processed=max(text.count("\f") + 1, 1 if text else 0),
+            errors=errors,
+        )

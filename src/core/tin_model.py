@@ -35,6 +35,8 @@ class TINModel:
         triangle.validate_edges(self.point_lookup)
         if triangle.triangle_id is None:
             triangle.triangle_id = len(self.triangles) + 1
+        elif any(existing.triangle_id == triangle.triangle_id for existing in self.triangles):
+            raise ValueError(f"duplicate triangle id: {triangle.triangle_id}")
         self.triangles.append(triangle)
         return triangle
 

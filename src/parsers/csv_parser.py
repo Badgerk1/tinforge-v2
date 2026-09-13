@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 from io import StringIO
 from pathlib import Path
+import re
 from typing import Iterable
 
 from src.core.point import Point3D
@@ -81,5 +82,22 @@ class CSVParser:
 
     @staticmethod
     def _detect_delimiter(text: str) -> str:
-        counts = {delimiter: text.count(delimiter) for delimiter in (",", "\t", ";", " ")}
-        return max(counts, key=counts.get)
+        try:
+            return csv.Sniffer().sniff(text, delimiters=",\t; ").delimiter
+        except csv.Error:
+            lines = [line for line in text.splitlines() if line.strip()][:5]
+            candidates = [",", "\t", ";", " "]
+            scored: list[tuple[int, str]] = []
+            for delimiter in candidates:
+                counts = []
+                for line in lines:
+                    if delimiter == " ":
+                        fields = [field for field in re.split(r"\s+", line.strip()) if field]
+                    else:
+                        fields = [field for field in line.split(delimiter) if field != ""]
+                    counts.append(len(fields))
+                if counts and min(counts) >= 3 and len(set(counts)) == 1:
+                    scored.append((counts[0], delimiter))
+            if scored:
+                return max(scored)[1]
+            return ","

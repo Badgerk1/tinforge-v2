@@ -42,3 +42,26 @@ def test_tin_model_serialization_round_trip():
     restored = TINModel.from_dict(model.to_dict())
     assert restored.point_count == 3
     assert restored.triangle_count == 1
+
+
+def test_triangulation_assigns_ids_for_points_without_ids():
+    points = [
+        Point3D(0.0, 0.0, 100.0),
+        Point3D(10.0, 0.0, 101.0),
+        Point3D(0.0, 10.0, 102.0),
+    ]
+    result = DelaunayTriangulator().triangulate(points)
+    assert sorted(point.point_id for point in result.model.points) == [1, 2, 3]
+
+
+def test_tin_model_rejects_duplicate_triangle_ids():
+    model = TINModel(name="Triangle IDs")
+    for point in SAMPLE_POINTS[:3]:
+        model.add_point(point)
+    model.add_triangle(Triangle((1, 2, 3), triangle_id=1))
+    try:
+        model.add_triangle(Triangle((1, 3, 2), triangle_id=1))
+    except ValueError as exc:
+        assert "duplicate triangle id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate triangle id rejection")
