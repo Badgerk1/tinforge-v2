@@ -1,3 +1,4 @@
+import src.core.triangulation as triangulation_module
 from src.core import DelaunayTriangulator, Point3D, TINModel, Triangle
 
 
@@ -84,3 +85,20 @@ def test_triangulation_falls_back_for_collinear_points():
     ]
     result = DelaunayTriangulator().triangulate(points)
     assert result.model.point_count == 3
+
+
+def test_triangulation_reports_scipy_fallback(monkeypatch):
+    points = [
+        Point3D(0.0, 0.0, 0.0, point_id=1),
+        Point3D(10.0, 0.0, 1.0, point_id=2),
+        Point3D(0.0, 10.0, 2.0, point_id=3),
+    ]
+
+    def broken_delaunay(_coords):
+        raise RuntimeError("forced failure")
+
+    monkeypatch.setattr(triangulation_module, "ScipyDelaunay", broken_delaunay)
+    result = DelaunayTriangulator().triangulate(points)
+    assert result.model.point_count == 3
+    assert result.warnings
+    assert "used fallback implementation" in result.warnings[0]

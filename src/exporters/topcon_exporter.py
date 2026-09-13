@@ -21,6 +21,7 @@ class TopconTP3Exporter(BaseExporter):
             "name": model.name,
             "source": model.source,
             "coordinate_system": model.coordinate_system,
+            "created_at": model.created_at.isoformat(),
             **model.metadata,
         }
         metadata_blob = json.dumps(metadata, sort_keys=True).encode("utf-8")

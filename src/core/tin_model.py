@@ -102,11 +102,18 @@ class TINModel:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "TINModel":
+        created_at_raw = payload.get("created_at")
+        if isinstance(created_at_raw, str):
+            created_at = datetime.fromisoformat(created_at_raw)
+        elif isinstance(created_at_raw, datetime):
+            created_at = created_at_raw
+        else:
+            created_at = datetime.now(timezone.utc)
         model = cls(
             name=payload.get("name", "Unnamed TIN"),
             source=payload.get("source", ""),
             coordinate_system=payload.get("coordinate_system", ""),
-            created_at=datetime.fromisoformat(payload["created_at"]) if payload.get("created_at") else datetime.now(timezone.utc),
+            created_at=created_at,
             metadata=dict(payload.get("metadata", {})),
         )
         for point_payload in payload.get("points", []):

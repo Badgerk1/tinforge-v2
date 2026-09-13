@@ -88,6 +88,7 @@ class CSVParser:
             lines = [line for line in text.splitlines() if line.strip()][:5]
             candidates = [",", "\t", ";", " "]
             scored: list[tuple[int, str]] = []
+            priority = {",": 0, "\t": 1, ";": 2, " ": 3}
             for delimiter in candidates:
                 counts = []
                 for line in lines:
@@ -99,5 +100,5 @@ class CSVParser:
                 if counts and min(counts) >= 3 and len(set(counts)) == 1:
                     scored.append((counts[0], delimiter))
             if scored:
-                return max(scored)[1]
+                return sorted(scored, key=lambda item: (-item[0], priority[item[1]]))[0][1]
             return ","

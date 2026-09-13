@@ -37,6 +37,13 @@ def test_tp3_parser_rejects_unknown_versions():
         raise AssertionError("expected parser to reject unknown TP3 version")
 
 
+def test_tp3_round_trip_preserves_created_at():
+    model = build_model()
+    payload = TopconTP3Exporter().export_bytes(model)
+    parsed = TP3Parser().parse_bytes(payload)
+    assert parsed.created_at == model.created_at
+
+
 def test_leica_export_has_expected_magic():
     payload = LeicaDBXExporter().export_bytes(build_model())
     assert payload[:4] == b"DBX\x00"

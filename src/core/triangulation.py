@@ -49,7 +49,7 @@ class DelaunayTriangulator:
                 )
             )
 
-        simplices = self._compute_simplices(model.points)
+        simplices, triangulation_warnings = self._compute_simplices(model.points)
         for simplex in simplices:
             triangle = Triangle(point_ids=tuple(simplex))
             if triangle.area_2d(model.point_lookup) > 0:
@@ -72,21 +72,21 @@ class DelaunayTriangulator:
             "triangle_count": float(model.triangle_count),
             "breakline_count": float(len(model.breaklines)),
         }
-        warnings: list[str] = []
+        warnings: list[str] = list(triangulation_warnings)
         if breaklines:
             warnings.append("Breaklines are stored as metadata and should be enforced by a constrained triangulator in a future release.")
         return TriangulationResult(model=model, quality_metrics=quality_metrics, statistics=statistics, warnings=warnings)
 
-    def _compute_simplices(self, points: list[Point3D]) -> list[tuple[int, int, int]]:
+    def _compute_simplices(self, points: list[Point3D]) -> tuple[list[tuple[int, int, int]], list[str]]:
         if ScipyDelaunay is not None:
             try:
                 coords = [(point.x, point.y) for point in points]
                 delaunay = ScipyDelaunay(coords)
                 ids = [point.point_id for point in points]
-                return [tuple(ids[index] for index in simplex) for simplex in delaunay.simplices]
-            except Exception:
-                pass
-        return self._bowyer_watson(points)
+                return [tuple(ids[index] for index in simplex) for simplex in delaunay.simplices], []
+            except Exception as exc:
+                return self._bowyer_watson(points), [f"SciPy triangulation failed; used fallback implementation: {exc}"]
+        return self._bowyer_watson(points), []
 
     def _bowyer_watson(self, points: list[Point3D]) -> list[tuple[int, int, int]]:
         indexed = [(point.point_id, point.x, point.y) for point in points if point.point_id is not None]
