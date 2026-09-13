@@ -102,3 +102,23 @@ def test_triangulation_reports_scipy_fallback(monkeypatch):
     assert result.model.point_count == 3
     assert result.warnings
     assert result.warnings[0] == "SciPy triangulation failed; used built-in fallback triangulation."
+
+
+def test_triangulation_without_scipy_still_succeeds(monkeypatch):
+    points = [
+        Point3D(0.0, 0.0, 0.0, point_id=1),
+        Point3D(10.0, 0.0, 1.0, point_id=2),
+        Point3D(0.0, 10.0, 2.0, point_id=3),
+    ]
+    monkeypatch.setattr(triangulation_module, "ScipyDelaunay", None)
+    result = DelaunayTriangulator().triangulate(points)
+    assert result.model.point_count == 3
+    assert result.warnings == []
+
+
+def test_triangulation_emits_breakline_warning():
+    result = DelaunayTriangulator().triangulate(
+        SAMPLE_POINTS,
+        breaklines=[[1, 2, 4]],
+    )
+    assert any("Breaklines are stored as metadata" in warning for warning in result.warnings)

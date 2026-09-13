@@ -86,8 +86,10 @@ class PDFParser:
                 if seen_records[source_point_id] == record:
                     duplicates_removed += 1
                     continue
-                next_generated_id += 1
                 replacement_id = next_generated_id
+                while replacement_id in seen_ids:
+                    replacement_id += 1
+                next_generated_id = replacement_id
                 errors.append(
                     f"Conflicting duplicate point id {source_point_id} found; preserved later observation as point {replacement_id}."
                 )
