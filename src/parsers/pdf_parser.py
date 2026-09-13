@@ -61,6 +61,7 @@ class PDFParser:
     def parse_text(self, text: str, *, source_name: str = "inline") -> PDFParseResult:
         seen_ids: set[int] = set()
         seen_records: dict[int, tuple[float, float, float, str]] = {}
+        next_generated_id = 0
         points: list[Point3D] = []
         duplicates_removed = 0
         errors: list[str] = []
@@ -79,13 +80,15 @@ class PDFParser:
                 if seen_records[point_id] == record:
                     duplicates_removed += 1
                     continue
-                replacement_id = max(seen_ids) + 1
+                next_generated_id = max(next_generated_id, max(seen_ids)) + 1
+                replacement_id = next_generated_id
                 errors.append(
                     f"Conflicting duplicate point id {point_id} found; preserved later observation as point {replacement_id}."
                 )
                 point_id = replacement_id
             seen_ids.add(point_id)
-            seen_records[point_id] = record
+            if match and int(match.group("id")) not in seen_records:
+                seen_records[int(match.group("id"))] = record
             points.append(
                 Point3D(
                     point_id=point_id,

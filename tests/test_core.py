@@ -65,3 +65,22 @@ def test_tin_model_rejects_duplicate_triangle_ids():
         assert "duplicate triangle id" in str(exc)
     else:
         raise AssertionError("expected duplicate triangle id rejection")
+
+
+def test_tin_model_auto_triangle_ids_follow_max_existing_id():
+    model = TINModel(name="Triangle IDs")
+    for point in SAMPLE_POINTS:
+        model.add_point(point)
+    model.add_triangle(Triangle((1, 2, 3), triangle_id=2))
+    model.add_triangle(Triangle((2, 4, 3)))
+    assert [triangle.triangle_id for triangle in model.triangles] == [2, 3]
+
+
+def test_triangulation_falls_back_for_collinear_points():
+    points = [
+        Point3D(0.0, 0.0, 0.0, point_id=1),
+        Point3D(1.0, 1.0, 1.0, point_id=2),
+        Point3D(2.0, 2.0, 2.0, point_id=3),
+    ]
+    result = DelaunayTriangulator().triangulate(points)
+    assert result.model.point_count == 3

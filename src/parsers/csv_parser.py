@@ -83,7 +83,7 @@ class CSVParser:
     @staticmethod
     def _detect_delimiter(text: str) -> str:
         try:
-            return csv.Sniffer().sniff(text, delimiters=",\t; ").delimiter
+            return csv.Sniffer().sniff(text, delimiters=",\t;").delimiter
         except csv.Error:
             lines = [line for line in text.splitlines() if line.strip()][:5]
             candidates = [",", "\t", ";", " "]

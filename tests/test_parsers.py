@@ -36,3 +36,9 @@ def test_pdf_parser_preserves_conflicting_duplicate_ids():
     assert len(result.points) == 2
     assert result.points[1].point_id == 2
     assert result.errors
+
+
+def test_pdf_parser_handles_multiple_conflicting_duplicates_for_same_id():
+    text = "1 100.0 200.0 50.0 BM\n1 101.0 201.0 51.0 EP\n1 102.0 202.0 52.0 CL\n"
+    result = PDFParser().parse_text(text, source_name="survey.txt")
+    assert [point.point_id for point in result.points] == [1, 2, 3]

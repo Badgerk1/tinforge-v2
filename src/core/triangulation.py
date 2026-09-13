@@ -78,13 +78,14 @@ class DelaunayTriangulator:
         return TriangulationResult(model=model, quality_metrics=quality_metrics, statistics=statistics, warnings=warnings)
 
     def _compute_simplices(self, points: list[Point3D]) -> list[tuple[int, int, int]]:
-        if any(point.point_id is None for point in points):
-            raise ValueError("all points must have point IDs before triangulation")
         if ScipyDelaunay is not None:
-            coords = [(point.x, point.y) for point in points]
-            delaunay = ScipyDelaunay(coords)
-            ids = [point.point_id for point in points]
-            return [tuple(ids[index] for index in simplex) for simplex in delaunay.simplices]
+            try:
+                coords = [(point.x, point.y) for point in points]
+                delaunay = ScipyDelaunay(coords)
+                ids = [point.point_id for point in points]
+                return [tuple(ids[index] for index in simplex) for simplex in delaunay.simplices]
+            except Exception:
+                pass
         return self._bowyer_watson(points)
 
     def _bowyer_watson(self, points: list[Point3D]) -> list[tuple[int, int, int]]:
